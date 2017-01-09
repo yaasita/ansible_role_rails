@@ -1,0 +1,38 @@
+---
+
+- name: フォルダ配置
+  file: path=/home/{{ rails.user }}/{{item}} state=directory recurse=yes
+  with_items:
+    - bin
+
+- name: 起動ファイル配置
+  template: src=bin/rails.sh dest=/home/{{ rails.user }}/bin/{{ rails.user }}.sh mode=0755
+
+- name: sharedフォルダ作成
+  file: path=/home/{{ rails.user }}/{{ rails.dir }}/shared/config state=directory recurse=yes
+
+- name: shared/logフォルダ作成
+  file: path=/home/{{ rails.user }}/{{ rails.dir }}/shared/log mode=0755 state=directory
+
+- name: database.yml配置
+  template: src=config/database.yml.j2 dest=/home/{{ rails.user }}/{{ rails.dir }}/shared/config/database.yml
+
+- name: unicorn設定ファイル配置
+  template: src=config/unicorn.rb.j2 dest=/home/{{ rails.user }}/{{ rails.dir }}/shared/config/unicorn.rb
+
+- name: その他設定ファイルの配置
+  copy: src=config/{{ item }} dest=/home/{{ rails.user }}/{{ rails.dir }}/shared/config/{{ item }} force=no
+  with_items:
+    - secrets.yml
+
+- name: 公開鍵設置
+  file: path=/home/{{ rails.user }}/.ssh mode=0700 state=directory
+
+- name: 公開鍵ファイル設置
+  copy: src=authorized_keys dest=/home/{{ rails.user }}/.ssh/authorized_keys mode=0600 force=no
+
+- name: 秘密鍵作成
+  shell: cd; bash -lc "ssh-keygen -f ~/.ssh/id_rsa -N ''" creates=/home/{{ rails.user }}/.ssh/id_rsa 
+
+- name: ssh_config
+  shell: cd; bash -lc "echo StrictHostKeyChecking no > ~/.ssh/config; chmod 600 ~/.ssh/config" creates=/home/{{ rails.user }}/.ssh/config

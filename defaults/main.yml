@@ -1,0 +1,21 @@
+# rails
+rails:
+  user: hogeapp
+  dir: rails
+  unicorn_port: 8000
+  unicorn_worker: 3
+  unicorn_timeout: 60
+  db:
+    adapter: mysql2
+    database: hogeapp
+    user: hogeapp
+    password: hogeapp
+    host: 127.0.0.1
+    encoding: utf8
+  nginx:
+    config: true
+    default_server: true
+    domain: www.example.com
+    use_ssl: true
+  systemd:
+    after: mysqld.service

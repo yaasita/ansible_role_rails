@@ -1,0 +1,15 @@
+
+/home/{{ rails.user }}/{{ rails.dir }}/current/log/*.log {
+    weekly
+    missingok
+    rotate 14
+    dateext
+    compress
+    delaycompress
+    notifempty
+    create 0644 {{ rails.user }} {{ rails.user }}
+    sharedscripts
+    postrotate
+      [ ! -f /home/{{ rails.user }}/{{rails.dir}}/current/tmp/pids/unicorn.pid ] || kill -HUP `cat /home/{{ rails.user }}/{{ rails.dir }}/current/tmp/pids/unicorn.pid`
+    endscript
+}

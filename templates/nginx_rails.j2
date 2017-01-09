@@ -1,0 +1,51 @@
+upstream {{ rails.user }} {
+  server 127.0.0.1:{{ rails.unicorn_port }};
+}
+server {
+{% if rails.nginx.default_server %}
+    listen 80 default_server;
+{% else %}
+    listen 80;
+{% endif %}
+    server_name {{ rails.nginx.domain }};
+    root /home/{{ rails.user }}/{{ rails.dir }}/current/public;
+
+    location / {
+        try_files $uri $uri/index.html $uri.html @rails;
+    }
+
+    location @rails {
+        proxy_redirect     off;
+        proxy_set_header   X-FORWARDED_PROTO http;
+        proxy_set_header   Host              $http_host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_pass http://{{ rails.user }};
+    }
+
+}
+{% if rails.nginx.use_ssl %}
+server {
+    listen 443;
+    server_name {{ rails.nginx.domain }};
+    root /home/{{ rails.user }}/{{ rails.dir }}/current/public;
+
+    ssl on;
+    ssl_certificate /etc/nginx/ssl/{{ rails.nginx.domain }}/server.crt;
+    ssl_certificate_key /etc/nginx/ssl/{{ rails.nginx.domain }}/server.key;
+
+    location / {
+        try_files $uri $uri/index.html $uri.html @rails;
+    }
+
+    location @rails {
+        proxy_redirect     off;
+        proxy_set_header   X-FORWARDED_PROTO https;
+        proxy_set_header   Host              $http_host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_pass http://{{ rails.user }};
+    }
+
+}
+{% endif %}

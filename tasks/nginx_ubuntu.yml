@@ -1,0 +1,33 @@
+---
+
+- name: nginxインストール
+  apt: pkg={{ item }} state=installed
+  with_items:
+    - nginx
+    - apache2-utils
+
+- name: nginx.conf修正
+  template: src=nginx_ubuntu.conf.j2 dest=/etc/nginx/nginx.conf owner=root group=root mode=0644
+  notify: restart nginx
+
+- name: app定義
+  template: src=nginx_rails.j2 dest=/etc/nginx/sites-available/{{ rails.user }}
+  notify: restart nginx
+
+- name: link作る
+  file: src=/etc/nginx/sites-available/{{ rails.user }} dest=/etc/nginx/sites-enabled/{{ rails.user }} state=link
+  notify: restart nginx
+
+- name: defaultを削除
+  file: path=/etc/nginx/sites-enabled/default state=absent
+  notify: restart nginx
+
+- name: sslフォルダ作る
+  file: path=/etc/nginx/ssl/{{ rails.nginx.domain }} mode=0755 state=directory recurse=yes
+
+- name: 鍵コピー
+  copy: src={{ item }} dest=/etc/nginx/ssl/{{ rails.nginx.domain }}/{{ item }} force=no
+  notify: restart nginx
+  with_items:
+    - server.crt
+    - server.key

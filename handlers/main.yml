@@ -1,0 +1,9 @@
+
+- name: update-rc.d
+  shell: update-rc.d {{ rails.user }} defaults chdir=/etc/init.d/
+
+- name: systemd enable
+  shell: systemctl enable {{ rails.user }}.service && systemctl daemon-reload
+
+- name: restart nginx
+  service: name=nginx state=restarted

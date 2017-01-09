@@ -1,0 +1,29 @@
+---
+
+- name: appユーザ作成
+  user: name={{ rails.user }} shell=/bin/bash append=yes 
+
+- name: Railsに必要なものインストール
+  apt: pkg={{ item }} state=installed
+  with_items:
+    - nodejs
+  when: ansible_distribution == "Ubuntu"
+
+- include: rails-dir-cap3.yml
+  become: yes
+  become_user: "{{ rails.user }}"
+
+- name: nginxの設定
+  include: nginx_centos.yml
+  when: rails.nginx.config == true and ansible_distribution == "CentOS"
+
+- name: nginxの設定
+  include: nginx_ubuntu.yml
+  when: rails.nginx.config == true and ansible_distribution == "Ubuntu"
+
+- name: systemd作成
+  template: src=systemd.j2 dest=/etc/systemd/system/{{ rails.user }}.service owner=root group=root mode=0644
+  notify: systemd enable
+
+- name: logrotate設定
+  template: src=logrotate.j2 dest=/etc/logrotate.d/{{ rails.user }} owner=root group=root mode=0644

@@ -1,0 +1,12 @@
+[Unit]
+Description={{ rails.user }}
+After={{ rails.systemd.after }}
+
+[Service]
+ExecStart=/home/logi/bin/{{ rails.user }}.sh start
+Type=forking
+User={{ rails.user }}
+Group={{ rails.user }}
+
+[Install]
+WantedBy=multi-user.target
